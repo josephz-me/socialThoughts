@@ -7,7 +7,7 @@ function Vehicle(x, y){
 	this.maxspeed = 20;
 	this.maxforce = 1;
 	this.target = createVector(x,y);
-	this.pos = createVector(random(width),random(height));
+	this.pos = createVector(random(-width, width),random(-height, height));
 	this.alpha = 0;
 }
 
@@ -16,11 +16,11 @@ Vehicle.prototype.fadeParticle = function(){
 }
 
 Vehicle.prototype.hitWalls = function(){
-	if(this.pos.x > width + 30 || this.pos.x < 0 - 30){
+	if(this.pos.x > width + 30 || this.pos.x < -width - 30){
 		this.vel.x = -(this.vel.x);
 	}
 
-	else if(this.pos.y > height + 30 || this.pos.y < 0 - 30){
+	else if(this.pos.y > height + 30 || this.pos.y < - height - 30){
 		this.vel.y = -(this.vel.y);
 	}
 }

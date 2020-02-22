@@ -4,7 +4,7 @@ let txt = '';
 let pts;
 let startBehavior = false;
 let recentlyDeleted;
-let startLength = 200;
+let startLength = 700;
 let points;
 let windowW;
 let textW;
@@ -35,40 +35,51 @@ function parseResult()
 	mostrecentword = myRec.resultString.substring(0,19);
 	storedWords.push(mostrecentword.split(' '));
 
+	// VOICE COMMANDS
 	if(mostrecentword.indexOf('erase')!==-1) { mostrecentword = ''; } 
+	// ZOOM out
+	if(mostrecentword.indexOf('social') !== -1) {
+		if(zoomOutCount < 2) {
+			scaleOut = true; 
+			zoomOutCount++;
+			zoomInCount--;
+		}
 
-	// var mostrecentword = myRec.resultString.split(' ').pop();
-	startBehavior = true;
-	// if(mostrecentword.indexOf("clear")!==-1) { background(255); }
+	} 
+	if(mostrecentword.indexOf('personal') !== -1) {
+		if(zoomInCount < 2){
+			scaleIn = true;
+			zoomInCount++;
+			zoomOutCount--;
+		}
+
+		if(zoomOutCount > -1) {zoomOutCount++;}
+	} 
+
 	txt = mostrecentword;
+	startBehavior = true;
+
+	print(mostrecentword);
 	myInputEvent();
 }
 
 function myInputEvent(){
-	// txt = this.value();
-	
-	//STEP 2
+
 	windowW = windowWidth;
 	textAlign(CENTER);
 	if(mostrecentword.length - 1 > 12){
-		points = font.textToPoints(txt + '...', 30, windowHeight/1.5, fontSize);
+		points = font.textToPoints(txt + '...', -400, 30, fontSize);
 	}
 	else{
-		points = font.textToPoints(txt, 30, windowHeight/1.5, fontSize);
+		points = font.textToPoints(txt, -400 , 30, fontSize);
 	}
-
-	// textWidth = dist(points[0].x, points[0].y, points[points.length - 1].x, points[points.length - 1].x);
-
-	// print('fontSize ' + fontSize);
-	// print('textWidth ' + textWidth);
-	// print('windowW ' + windowW);
 
 	// type new letter --> add new particles
 	let extraParticles = vehicles.length - points.length;
 
 	if(points.length + 40 > vehicles.length){
 		let updatedLength = points.length - vehicles.length; //points need adding
-		for ( i = 0; i < updatedLength + 100; i++){
+		for ( i = 0; i < updatedLength + 300; i++){
 			let vehicle = new Vehicle(points[i].x, points[i].y);
 			vehicles.push(vehicle);
 
@@ -85,13 +96,6 @@ function myInputEvent(){
 		}
 	}
 
-
-
-	//retrieve last char
-	// if(keyCode != BACKSPACE){
-	// 	recentlyDeleted = txt.charAt(txt.length-1);
-	// }
-
 	for( i = 0; i < points.length; i++){
 		vehicles[i].target.x = points[i].x;
 		vehicles[i].target.y = points[i].y;
@@ -100,57 +104,65 @@ function myInputEvent(){
 	startBehavior = true; //triggers behavior
 }
 
+
+let scaleOut = false;
+let scaleIn = false;
+
 function setup(){
 	createCanvas(windowWidth, windowHeight);
-	points = font.textToPoints(txt, 20, windowHeight, fontSize);
+	points = font.textToPoints(txt, 0, 0, fontSize);
 	windowW = windowWidth;
-	// for (let i = 0; i < startLength; i++){
-	// 	//make new particle, do it once
-	// 	let vehicle = new Vehicle(points[i].x, points[i].y);
-	// 	vehicles.push(vehicle);
-	// 	// print(vehicles[i].target.x);
-	// }
 	initialPoints(); 
-
-	//input
-	// let inp = createInput('');
-	// inp.addClass('submission');
-	// inp.input(myInputEvent);
 	myRec.start(); // start engine
 }
 
-let translateCount = 0;
-
 function draw(){
 	background(0);
-	createCanvas(windowW, windowHeight);
+	translate(width / 2, height / 2);
+	zoomScale();
+
 	for ( let j = 0; j < vehicles.length; j++){
 		//apply attraction
 		if(startBehavior){
 			//only apply behavior to certain dots
 			if(j < points.length){
 				vehicles[j].behaviors();
-				// vehicles[j].perlinTarget();
 			}
 		}
-		// print(translateCount);
+		
 		vehicles[j].update();
-		//show particle/
 		vehicles[j].show();
 		vehicles[j].hitWalls();
-		// capParticles();
-	}
-	// adapt size of particles
-	// if(textWidth > windowW){
-	// 	fontSize -= 10;
-	// 	// points = font.textToPoints(txt, 20, windowHeight/2, fontSize);
-	// 	print(points.length);
-	// 	textWidth = dist(points[0].x, points[0].y, points[points.length - 1].x, points[points.length - 1].x);
-	// }
+	}	
 }
 
-// function capParticles(){
-// 	if(vehicles.length > 1200){
-// 		vehicles.pop();
-// 	}
-// }
+// ZOOM IN AND OUT
+let scl = 1;
+let sf = 0;
+let zoomInCount = 0;
+let zoomOutCount = 0;
+
+function zoomScale(){
+	scale(scl);
+	if(scaleOut){
+		if(sf < PI / 2){
+			scl = scl - map((sin(sf - PI / 2) + 1), 0, 2, 0, .02);
+			sf += .02;
+		}
+		else{
+			scaleOut = false;
+			sf = 0;
+		}
+	}
+
+	if(scaleIn){
+		if( sf < PI / 2){
+			scl = scl + map((sin(sf - PI / 2) + 1), 0, 2, 0, .02);
+			sf += .02;
+		}
+		else{
+			scaleIn = false;
+			sf = 0;
+		}
+	}
+}
