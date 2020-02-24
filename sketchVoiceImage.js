@@ -5,7 +5,7 @@ let pts;
 let startBehavior = false;
 let recentlyDeleted;
 let startLength = 700;
-let points;
+let points = [];
 let windowW;
 let textW;
 let fontSize = 150;
@@ -13,10 +13,10 @@ let bg = 255;
 let mostrecentword;
 let storedWords = [];
 let preStored;
+let drawingCounter = 0;
+let isText = true;
 
-function preload(){
-	font = loadFont('neueHaus.ttf');
-}
+const wait = (amount = 0) => new Promise(resolve => setTimeout(resolve, amount));
 
 // STEP 1
 function initialPoints(){
@@ -30,48 +30,88 @@ var myRec = new p5.SpeechRec('en-US', parseResult); // new P5.SpeechRec object
 myRec.continuous = true; // do continuous recognition
 myRec.interimResults = true; // allow partial recognition (faster, less accurate)
 
-function parseResult()
+async function parseResult()
 {
-	mostrecentword = myRec.resultString.substring(0,19);
-	storedWords.push(mostrecentword.split(' '));
+	await wait(300);
+	if(myRec.resultString.indexOf('erase')!==-1) {
+		mostrecentword = ''; 
+		txt = mostrecentword;
+		startBehavior = true;
+		myInputEvent();
+	}
 
-	// VOICE COMMANDS
-	if(mostrecentword.indexOf('erase')!==-1) { mostrecentword = ''; } 
-	// ZOOM out
-	if(mostrecentword.indexOf('social') !== -1) {
-		if(zoomOutCount < 2) {
-			scaleOut = true; 
-			zoomOutCount++;
-			zoomInCount--;
+	if(myRec.resultString.indexOf('flower')!==-1) {
+		for(r = 0; r < img.width; r++){
+			for( c = 0; c < img.height; c++){
+				if(brightness(img.get(r,c)) < 20){
+					let newDot = {
+						x: r - width / 2,
+						y: c - height / 2, 
+					}
+					points.push(newDot);
+					drawingCounter++;
+				}
+			}
+		}
+		print(drawingCounter);
+
+
+		mostrecentword = ''; 
+		txt = mostrecentword;
+		startBehavior = true;
+		isText = false;
+		myInputEvent();
+	}
+
+
+	
+	if(myRec.resultString.indexOf('type') === 0) {
+		// mostrecentword = myRec.resultString.substring(0,19);
+		mostrecentword = myRec.resultString.slice(myRec.resultString.indexOf('type') + 5, myRec.resultString.length);
+		storedWords.push(mostrecentword.split(' '));
+
+		// VOICE COMMANDS
+		if(mostrecentword.indexOf('erase')!==-1) { mostrecentword = ''; } 
+		// ZOOM out
+		if(mostrecentword.includes('social')) {
+			if(zoomOutCount < 2) {
+				scaleOut = true; 
+				zoomOutCount++;
+				zoomInCount--;
+			}
 		}
 
-	} 
-	if(mostrecentword.indexOf('personal') !== -1) {
-		if(zoomInCount < 2){
-			scaleIn = true;
-			zoomInCount++;
-			zoomOutCount--;
-		}
+		if(mostrecentword.includes('personal')) {
+			
+			if(zoomInCount < 2){
+				scaleIn = true;
+				zoomInCount++;
+				zoomOutCount--;
+			}
 
-		if(zoomOutCount > -1) {zoomOutCount++;}
-	} 
+			if(zoomOutCount > -1) {zoomOutCount++;}
+		} 
 
-	txt = mostrecentword;
-	startBehavior = true;
-
-	print(mostrecentword);
-	myInputEvent();
+		txt = mostrecentword;
+		startBehavior = true;
+		myInputEvent();
+	}
+	print(myRec.resultString);
+	
 }
 
 function myInputEvent(){
-
 	windowW = windowWidth;
 	textAlign(CENTER);
-	if(mostrecentword.length - 1 > 12){
-		points = font.textToPoints(txt + '...', -400, 30, fontSize);
-	}
-	else{
-		points = font.textToPoints(txt, -400 , 30, fontSize);
+
+	// creates text particles *if statement
+	if(isText){
+		if(mostrecentword.length - 1 > 12){
+			points = font.textToPoints(txt + '...', -400, 30, fontSize);
+		}
+		else{
+			points = font.textToPoints(txt, -400 , 30, fontSize);
+		}
 	}
 
 	// type new letter --> add new particles
@@ -96,17 +136,27 @@ function myInputEvent(){
 		}
 	}
 
+	makeTarget();
+	startBehavior = true; //triggers behavior
+	isText = true;
+}
+
+function makeTarget(){
 	for( i = 0; i < points.length; i++){
 		vehicles[i].target.x = points[i].x;
 		vehicles[i].target.y = points[i].y;
 	}
-
-	startBehavior = true; //triggers behavior
 }
 
 
 let scaleOut = false;
 let scaleIn = false;
+let img;
+
+function preload(){
+	font = loadFont('neueHaus.ttf');
+	img = loadImage('testImage.jpg');
+}
 
 function setup(){
 	createCanvas(windowWidth, windowHeight);
@@ -114,11 +164,17 @@ function setup(){
 	windowW = windowWidth;
 	initialPoints(); 
 	myRec.start(); // start engine
+
+	img.loadPixels();
+	// imageMode(CENTER);
+	image(img, 0, 0);
 }
 
 function draw(){
 	background(0);
 	translate(width / 2, height / 2);
+
+
 	zoomScale();
 
 	for ( let j = 0; j < vehicles.length; j++){

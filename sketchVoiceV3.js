@@ -13,6 +13,8 @@ let bg = 255;
 let mostrecentword;
 let storedWords = [];
 let preStored;
+const wait = (amount = 0) => new Promise(resolve => setTimeout(resolve, amount));
+
 
 function preload(){
 	font = loadFont('neueHaus.ttf');
@@ -30,37 +32,51 @@ var myRec = new p5.SpeechRec('en-US', parseResult); // new P5.SpeechRec object
 myRec.continuous = true; // do continuous recognition
 myRec.interimResults = true; // allow partial recognition (faster, less accurate)
 
-function parseResult()
+async function parseResult()
 {
-	mostrecentword = myRec.resultString.substring(0,19);
-	storedWords.push(mostrecentword.split(' '));
 
-	// VOICE COMMANDS
-	if(mostrecentword.indexOf('erase')!==-1) { mostrecentword = ''; } 
-	// ZOOM out
-	if(mostrecentword.indexOf('social') !== -1) {
-		if(zoomOutCount < 2) {
-			scaleOut = true; 
-			zoomOutCount++;
-			zoomInCount--;
-		}
-
+	await wait(300);
+	print(myRec.resultString);
+	if(myRec.resultString.indexOf('erase')!==-1) {
+		mostrecentword = ''; 
+		txt = mostrecentword;
+		startBehavior = true;
+		myInputEvent();
 	} 
-	if(mostrecentword.indexOf('personal') !== -1) {
-		if(zoomInCount < 2){
-			scaleIn = true;
-			zoomInCount++;
-			zoomOutCount--;
-		}
+	
+	if(myRec.resultString.indexOf('Alexa right') === 0) {
+		print('true');
+		// mostrecentword = myRec.resultString.substring(0,19);
+		mostrecentword = myRec.resultString.slice(myRec.resultString.indexOf('right') + 5, myRec.resultString.length);
+		storedWords.push(mostrecentword.split(' '));
 
-		if(zoomOutCount > -1) {zoomOutCount++;}
-	} 
+		// VOICE COMMANDS
+		if(mostrecentword.indexOf('erase')!==-1) { mostrecentword = ''; } 
+		// ZOOM out
+		if(mostrecentword.includes('social')) {
+			if(zoomOutCount < 2) {
+				scaleOut = true; 
+				zoomOutCount++;
+				zoomInCount--;
+			}
 
-	txt = mostrecentword;
-	startBehavior = true;
+		} 
+		if(mostrecentword.includes('personal')) {
+			
+			if(zoomInCount < 2){
+				scaleIn = true;
+				zoomInCount++;
+				zoomOutCount--;
+			}
 
-	print(mostrecentword);
-	myInputEvent();
+			if(zoomOutCount > -1) {zoomOutCount++;}
+		} 
+
+		txt = mostrecentword;
+		startBehavior = true;
+		myInputEvent();
+	}
+	
 }
 
 function myInputEvent(){
