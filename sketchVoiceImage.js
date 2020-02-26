@@ -32,6 +32,7 @@ myRec.interimResults = true; // allow partial recognition (faster, less accurate
 
 async function parseResult()
 {
+	print(myRec.resultString);
 	await wait(300);
 	if(myRec.resultString.indexOf('erase')!==-1) {
 		mostrecentword = ''; 
@@ -40,9 +41,9 @@ async function parseResult()
 		myInputEvent();
 	}
 
-	if(myRec.resultString.indexOf('flower')!==-1) {
-		for(r = 0; r < img.width; r++){
-			for( c = 0; c < img.height; c++){
+	if(myRec.resultString.indexOf('draw a rose')!==-1) {
+		for(r = 0; r < img.width; r += 1.5){
+			for( c = 0; c < img.height; c += 1.5){
 				if(brightness(img.get(r,c)) < 20){
 					let newDot = {
 						x: r - width / 2,
@@ -53,7 +54,7 @@ async function parseResult()
 				}
 			}
 		}
-		print(drawingCounter);
+
 
 
 		mostrecentword = ''; 
@@ -64,10 +65,10 @@ async function parseResult()
 	}
 
 
-	
-	if(myRec.resultString.indexOf('type') === 0) {
+	let word = 'pin-up';
+	if(myRec.resultString.indexOf(word) === 0) {
 		// mostrecentword = myRec.resultString.substring(0,19);
-		mostrecentword = myRec.resultString.slice(myRec.resultString.indexOf('type') + 5, myRec.resultString.length);
+		mostrecentword = myRec.resultString.slice(myRec.resultString.indexOf(word) + word.length + 1, myRec.resultString.length);
 		storedWords.push(mostrecentword.split(' '));
 
 		// VOICE COMMANDS
