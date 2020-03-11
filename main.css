@@ -17,6 +17,10 @@ textarea{
 	resize:none;
 }
 
+p{
+	color: white;
+}
+
 label {
 	color:white;
 }
